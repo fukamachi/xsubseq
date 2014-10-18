@@ -159,8 +159,10 @@
 
 (defun coerce-to-string (seq)
   (etypecase seq
+    (null-concatenated-xsubseqs "")
     (octets-concatenated-xsubseqs (octets-concatenated-xsubseqs-to-string seq))
     (string-concatenated-xsubseqs (string-concatenated-xsubseqs-to-sequence seq))
+    (octets-xsubseq (octets-xsubseq-to-string seq))
     (string-xsubseq (xsubseq-to-sequence seq))))
 
 #+(or sbcl openmcl cmu allegro ecl abcl)
@@ -177,6 +179,7 @@
         (cond
           ((subtypep type 'octets-concatenated-xsubseqs) `(octets-concatenated-xsubseqs-to-string ,seq))
           ((subtypep type 'string-concatenated-xsubseqs) `(string-concatenated-xsubseqs-to-sequence ,seq))
+          ((subtypep type 'octets-xsubseq) `(octets-xsubseq-to-string ,seq))
           ((subtypep type 'string-xsubseq) `(xsubseq-to-sequence ,seq))
           (T form)))))
 
@@ -188,6 +191,20 @@
              :start2 (xsubseq-start seq)
              :end2 (xsubseq-end seq))
     result))
+
+(defun octets-xsubseq-to-string (seq)
+  (let ((result (make-array (xsubseq-len seq)
+                            :element-type 'character)))
+    (declare (type simple-string result))
+    (let ((data (xsubseq-data seq))
+          (end (xsubseq-end seq)))
+      (do ((i (xsubseq-start seq) (1+ i))
+           (j 0 (1+ j)))
+          ((= i end) result)
+        (setf (aref result j)
+              (code-char
+               (the (unsigned-byte 8)
+                    (aref (the octets data) i))))))))
 
 (defun concatenated-xsubseqs-to-sequence (seq)
   (let ((result (make-array (concatenated-xsubseqs-len seq)
