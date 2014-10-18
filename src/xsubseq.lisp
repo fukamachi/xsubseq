@@ -40,6 +40,8 @@
   (last nil :type list)
   (children nil :type list))
 
+(defstruct (null-concatenated-xsubseqs (:include concatenated-xsubseqs)))
+
 (defstruct (octets-concatenated-xsubseqs (:include concatenated-xsubseqs)))
 
 (defstruct (string-concatenated-xsubseqs (:include concatenated-xsubseqs)))
@@ -101,6 +103,7 @@
                       :children (cons ,seq1 children)
                       :last last))))
       (etypecase seq1
+        (null-concatenated-xsubseqs seq2)
         (concatenated-xsubseqs
          (multiple-value-bind (children last len)
              (seq-values seq2)
@@ -191,6 +194,10 @@
 
 (defmacro with-xsubseqs ((xsubseqs &key initial-value) &body body)
   `(let ((,xsubseqs ,(or initial-value
-                         `(make-concatenated-xsubseqs))))
+                         `(make-null-concatenated-xsubseqs))))
      ,@body
-     (concatenated-xsubseqs-to-sequence ,xsubseqs)))
+
+     (typecase ,xsubseqs
+       (null-concatenated-xsubseqs nil)
+       (xsubseq (xsubseq-to-sequence ,xsubseqs))
+       (T (concatenated-xsubseqs-to-sequence ,xsubseqs)))))
