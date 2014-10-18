@@ -9,7 +9,13 @@
                 #+abcl :lisp
                 :variable-information)
   (:export :xsubseq
+           :octets-xsubseq
+           :string-xsubseq
            :concatenated-xsubseqs
+           :null-concatenated-xsubseqs
+           :octets-concatenated-xsubseqs
+           :string-concatenated-xsubseqs
+           :make-concatenated-xsubseqs
            :xlength
            :xnconc
            :xnconcf
@@ -36,10 +42,20 @@
                            (:constructor make-string-xsubseq (data start &optional (end (length data))
                                                               &aux (len (- end start))))))
 
-(defstruct concatenated-xsubseqs
+(defstruct (concatenated-xsubseqs (:constructor %make-concatenated-xsubseqs))
   (len 0 :type integer)
   (last nil :type list)
   (children nil :type list))
+
+(defun make-concatenated-xsubseqs (&rest children)
+  (if (null children)
+      (make-null-concatenated-xsubseqs)
+      (%make-concatenated-xsubseqs :children children
+                                   :last (last children)
+                                   :len (reduce #'+
+                                                children
+                                                :key #'xsubseq-len
+                                                :initial-value 0))))
 
 (defstruct (null-concatenated-xsubseqs (:include concatenated-xsubseqs)))
 
@@ -95,7 +111,7 @@
                      (,(cond
                          ((eq type 'octets) 'make-octets-concatenated-xsubseqs)
                          ((eq type 'string) 'make-string-concatenated-xsubseqs)
-                         (T 'make-concatenated-xsubseqs))
+                         (T '%make-concatenated-xsubseqs))
                       :len (+ (xsubseq-len ,seq1) len)
                       :children (cons ,seq1 children)
                       :last last))))
