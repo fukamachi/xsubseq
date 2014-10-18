@@ -19,7 +19,7 @@
   :components ((:module "src"
                 :components
                 ((:file "xsubseq"))))
-  :description ""
+  :description "Efficient way to manage \"subseq\"s in Common Lisp"
   :long-description
   #.(with-open-file (stream (merge-pathnames
                              #p"README.markdown"
