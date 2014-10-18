@@ -9,15 +9,21 @@
 
 (defparameter *data1*
   (make-array 3 :element-type '(unsigned-byte 8) :initial-contents '(1 2 3)))
-
 (defparameter *data2*
   (make-array 3 :element-type '(unsigned-byte 8) :initial-contents '(11 22 33)))
+
+(defparameter *str1* "Hello")
+(defparameter *str2* "World")
 
 (subtest "xsubseq"
   (is-type (xsubseq *data1* 0 1) 'xsubseq
            "Can create a new XSUBSEQ")
   (is-type (xsubseq *data1* 0) 'xsubseq
-           "Can omit END"))
+           "Can omit END")
+  (is-type (xsubseq *str1* 0 1) 'xsubseq
+           "Can create a new XSUBSEQ (string)")
+  (is-type (xsubseq *str2* 0) 'xsubseq
+           "Can omit END (string)"))
 
 (subtest "xnconc"
   (is-type (xnconc (xsubseq *data1* 0 1))
@@ -54,7 +60,17 @@
                                   (xsubseq *data1* 1)))
       #(1 33 2 3)
       :test #'equalp
-      "CONCATENATED-XSUBSEQ"))
+      "CONCATENATED-XSUBSEQ")
+  (is (coerce-to-sequence (xsubseq *str1* 0 2))
+      "He"
+      :test #'equal
+      "XSUBSEQ (string)")
+  (is (coerce-to-sequence (xnconc (xsubseq *str1* 0 1)
+                                  (xsubseq *str2* 2)
+                                  (xsubseq *str1* 1)))
+      "Hrldello"
+      :test #'equal
+      "CONCATENATED-XSUBSEQ (string)"))
 
 (subtest "xlength"
   (is (xlength (xsubseq *data1* 0 1)) 1)
