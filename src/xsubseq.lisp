@@ -64,16 +64,12 @@
                  'string)
                 ((and (listp data)
                       (eq (car data) 'the)
-                      (cadr data)
-                      (subtypep (cadr data) 'octets))
-                 'octets)
+                      (cadr data)))
                 ((and (listp data)
                       (eq (car data) 'make-array)
                       (null (cadr (member :adjustable data)))
                       (null (cadr (member :fill-pointer data)))
-                      (eq (cadr (member :element-type data))
-                          '(unsigned-byte 8)))
-                 'octets)))
+                      (cadr (member :element-type data))))))
         (g-data (gensym "DATA")))
     (if (null type)
         form
@@ -143,11 +139,46 @@
     (concatenated-xsubseqs (concatenated-xsubseqs-to-sequence seq))
     (xsubseq (xsubseq-to-sequence seq))))
 
+#+(or sbcl openmcl cmu allegro ecl abcl)
+(define-compiler-macro coerce-to-sequence (&whole form &environment env seq)
+  (let ((type (cond
+                ((constantp seq) (type-of seq))
+                ((and (symbolp seq)
+                      (assoc 'type (nth-value 2 (variable-information seq env)))))
+                ((and (listp seq)
+                      (eq (car seq) 'the)
+                      (cadr seq))))))
+    (if (null type)
+        form
+        (cond
+          ((subtypep type 'octets-concatenated-xsubseqs) `(octets-concatenated-xsubseqs-to-sequence ,seq))
+          ((subtypep type 'string-concatenated-xsubseqs) `(string-concatenated-xsubseqs-to-sequence ,seq))
+          ((subtypep type 'concatenated-xsubseqs) `(concatenated-xsubseqs-to-sequence ,seq))
+          ((subtypep type 'xsubseq) `(xsubseq-to-sequence ,seq))
+          (T form)))))
+
 (defun coerce-to-string (seq)
   (etypecase seq
     (octets-concatenated-xsubseqs (octets-concatenated-xsubseqs-to-string seq))
     (string-concatenated-xsubseqs (string-concatenated-xsubseqs-to-sequence seq))
     (string-xsubseq (xsubseq-to-sequence seq))))
+
+#+(or sbcl openmcl cmu allegro ecl abcl)
+(define-compiler-macro coerce-to-string (&whole form &environment env seq)
+  (let ((type (cond
+                ((constantp seq) (type-of seq))
+                ((and (symbolp seq)
+                      (assoc 'type (nth-value 2 (variable-information seq env)))))
+                ((and (listp seq)
+                      (eq (car seq) 'the)
+                      (cadr seq))))))
+    (if (null type)
+        form
+        (cond
+          ((subtypep type 'octets-concatenated-xsubseqs) `(octets-concatenated-xsubseqs-to-string ,seq))
+          ((subtypep type 'string-concatenated-xsubseqs) `(string-concatenated-xsubseqs-to-sequence ,seq))
+          ((subtypep type 'string-xsubseq) `(xsubseq-to-sequence ,seq))
+          (T form)))))
 
 (defun xsubseq-to-sequence (seq)
   (let ((result (make-array (xsubseq-len seq)
