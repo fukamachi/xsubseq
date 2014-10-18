@@ -72,6 +72,16 @@
       :test #'equal
       "CONCATENATED-XSUBSEQ (string)"))
 
+(subtest "coerce-to-string"
+  (is (coerce-to-string (xnconc (xsubseq *data2* 2)
+                                (xsubseq *data2* 2)))
+      "!!"
+      :test #'equal)
+  (is (coerce-to-string (xnconc (xsubseq *str1* 0 1)
+                                (xsubseq *str2* 2)))
+      "Hrld"
+      :test #'equal))
+
 (subtest "xlength"
   (is (xlength (xsubseq *data1* 0 1)) 1)
   (is (xlength (xsubseq *data1* 2)) 1)

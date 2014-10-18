@@ -14,6 +14,7 @@
            :xnconc
            :xnconcf
            :coerce-to-sequence
+           :coerce-to-string
            :with-xsubseqs))
 (in-package :xsubseq)
 
@@ -142,6 +143,12 @@
     (concatenated-xsubseqs (concatenated-xsubseqs-to-sequence seq))
     (xsubseq (xsubseq-to-sequence seq))))
 
+(defun coerce-to-string (seq)
+  (etypecase seq
+    (octets-concatenated-xsubseqs (octets-concatenated-xsubseqs-to-string seq))
+    (string-concatenated-xsubseqs (string-concatenated-xsubseqs-to-sequence seq))
+    (string-xsubseq (xsubseq-to-sequence seq))))
+
 (defun xsubseq-to-sequence (seq)
   (let ((result (make-array (xsubseq-len seq)
                             :element-type
@@ -177,6 +184,22 @@
                       :end2 (xsubseq-end seq))
              (incf current-pos
                    (xsubseq-len seq)))
+    result))
+
+(defun octets-concatenated-xsubseqs-to-string (seq)
+  (let ((result (make-array (concatenated-xsubseqs-len seq)
+                            :element-type 'character)))
+    (declare (type simple-string result))
+    (loop with current-pos = 0
+          for seq in (concatenated-xsubseqs-children seq)
+          do (do ((i (xsubseq-start seq) (1+ i))
+                  (j current-pos (1+ j)))
+                 ((= i (xsubseq-end seq))
+                  (setf current-pos j))
+               (setf (aref result j)
+                     (code-char
+                      (the (unsigned-byte 8)
+                           (aref (the octets (xsubseq-data seq)) i))))))
     result))
 
 (defun string-concatenated-xsubseqs-to-sequence (seq)
