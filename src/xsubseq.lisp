@@ -1,12 +1,11 @@
 (in-package :cl-user)
 (defpackage xsubseq
   (:use :cl)
+  #+(or sbcl openmcl cmu allegro)
   (:import-from #+sbcl :sb-cltl2
                 #+openmcl :ccl
                 #+cmu :ext
                 #+allegro :sys
-                #+ecl :si
-                #+abcl :lisp
                 :variable-information)
   (:export :xsubseq
            :octets-xsubseq
@@ -69,7 +68,7 @@
     (string (make-string-xsubseq data start end))
     (T (make-xsubseq data start end))))
 
-#+(or sbcl openmcl cmu allegro ecl abcl)
+#+(or sbcl openmcl cmu allegro)
 (define-compiler-macro xsubseq (&whole form &environment env data start &optional end)
   (let ((type (cond
                 ((constantp data) (type-of data))
@@ -155,7 +154,7 @@
     (concatenated-xsubseqs (concatenated-xsubseqs-to-sequence seq))
     (xsubseq (xsubseq-to-sequence seq))))
 
-#+(or sbcl openmcl cmu allegro ecl abcl)
+#+(or sbcl openmcl cmu allegro)
 (define-compiler-macro coerce-to-sequence (&whole form &environment env seq)
   (let ((type (cond
                 ((constantp seq) (type-of seq))
@@ -181,7 +180,7 @@
     (octets-xsubseq (octets-xsubseq-to-string seq))
     (string-xsubseq (xsubseq-to-sequence seq))))
 
-#+(or sbcl openmcl cmu allegro ecl abcl)
+#+(or sbcl openmcl cmu allegro)
 (define-compiler-macro coerce-to-string (&whole form &environment env seq)
   (let ((type (cond
                 ((constantp seq) (type-of seq))
