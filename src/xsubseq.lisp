@@ -66,7 +66,7 @@
   (typecase data
     (octets (make-octets-xsubseq data start end))
     (string (make-string-xsubseq data start end))
-    (T (make-xsubseq data start end))))
+    (t (make-xsubseq data start end))))
 
 #+(or sbcl openmcl cmu allegro)
 (define-compiler-macro xsubseq (&whole form &environment env data start &optional end)
@@ -93,7 +93,7 @@
                                       (make-octets-xsubseq ,g-data ,start ,(or end `(length ,g-data)))))
           ((subtypep type 'string) `(let ((,g-data ,data))
                                       (make-string-xsubseq ,g-data ,start ,(or end `(length ,g-data)))))
-          (T form)))))
+          (t form)))))
 
 (defun %xnconc2 (seq1 seq2)
   (flet ((seq-values (seq)
@@ -110,7 +110,7 @@
                      (,(cond
                          ((eq type 'octets) 'make-octets-concatenated-xsubseqs)
                          ((eq type 'string) 'make-string-concatenated-xsubseqs)
-                         (T '%make-concatenated-xsubseqs))
+                         (t '%make-concatenated-xsubseqs))
                       :len (+ (xsubseq-len ,seq1) len)
                       :children (cons ,seq1 children)
                       :last last))))
@@ -170,7 +170,7 @@
           ((subtypep type 'string-concatenated-xsubseqs) `(string-concatenated-xsubseqs-to-sequence ,seq))
           ((subtypep type 'concatenated-xsubseqs) `(concatenated-xsubseqs-to-sequence ,seq))
           ((subtypep type 'xsubseq) `(xsubseq-to-sequence ,seq))
-          (T form)))))
+          (t form)))))
 
 (defun coerce-to-string (seq)
   (etypecase seq
@@ -196,7 +196,7 @@
           ((subtypep type 'string-concatenated-xsubseqs) `(string-concatenated-xsubseqs-to-sequence ,seq))
           ((subtypep type 'octets-xsubseq) `(octets-xsubseq-to-string ,seq))
           ((subtypep type 'string-xsubseq) `(xsubseq-to-sequence ,seq))
-          (T form)))))
+          (t form)))))
 
 (defun xsubseq-to-sequence (seq)
   (let ((result (make-array (xsubseq-len seq)
@@ -286,4 +286,4 @@
      (typecase ,xsubseqs
        (null-concatenated-xsubseqs nil)
        (xsubseq (xsubseq-to-sequence ,xsubseqs))
-       (T (concatenated-xsubseqs-to-sequence ,xsubseqs)))))
+       (t (concatenated-xsubseqs-to-sequence ,xsubseqs)))))
